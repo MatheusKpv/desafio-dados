@@ -1,5 +1,7 @@
 package jv.triersistemas.desafio_dados.service.impl;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -14,6 +16,13 @@ public class DadoServiceImpl implements DadoService {
 
 	@Override
 	public ResponseEntity<String> cadastraDados(Integer qtd, Integer aposta) {
+		if (qtd < 1 || qtd > 4) {
+			return ResponseEntity.badRequest().body("Quantidade de dados deve ser entre 1 e 4");
+		}
+		int apostaMax = 6 * qtd;
+		if (aposta > apostaMax || aposta < qtd) {
+			return ResponseEntity.badRequest().body("Digite um valor válido de aposta");
+		}
 		Map<Integer, Integer> mapDados = geraDados(qtd);
 		String body = geraBody(mapDados, aposta);
 		return ResponseEntity.ok(body);
@@ -25,18 +34,18 @@ public class DadoServiceImpl implements DadoService {
 		int soma = 0;
 		for (Integer numDado : mapDados.keySet()) {
 			cont++;
-			sb.append("Dado "+ cont +": Valor sorteado "+ mapDados.get(numDado));
+			sb.append("Dado ").append(cont).append(": Valor sorteado ").append(mapDados.get(numDado));
 			soma += mapDados.get(numDado);
 			sb.append("\n");
 		}
-		sb.append("Soma: "+ soma);
-		sb.append("\nPercentual: "+ (calculaPercentual(soma, aposta)));
+		sb.append("Soma: ").append(soma);
+		sb.append("\nPercentual em relação ao sorteio: ").append(calculaPercentual(soma, aposta)).append("%");
 		return sb.toString();
 	}
 
-	private Object calculaPercentual(int soma, Integer aposta) {
-		double percentual = (soma/aposta)*100;
-		return percentual;
+	private BigDecimal calculaPercentual(int soma, Integer aposta) {
+
+        return BigDecimal.valueOf(soma).multiply(BigDecimal.valueOf(100)).divide(BigDecimal.valueOf(aposta), 0, RoundingMode.DOWN);
 	}
 
 	private Map<Integer, Integer> geraDados(Integer qtd) {
